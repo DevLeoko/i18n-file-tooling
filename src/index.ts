@@ -35,10 +35,24 @@ const targetLanguages = options.to
   .filter((lang: string) => lang.length > 0);
 const useTS = options.ts;
 const useJS = options.js;
-let useSingleQuotes = options.singleQuotes;
-let useDoubleQuotes = options.doubleQuotes;
-let includeTrailingComma = options.trailingComma;
-let includeSemicolon = options.semicolon;
+
+// Handle quote type
+let quoteType: "single" | "double" | undefined;
+if (options.singleQuotes && options.doubleQuotes) {
+  console.error("Cannot specify both --single-quotes and --double-quotes");
+  process.exit(1);
+} else if (options.singleQuotes) {
+  quoteType = "single";
+} else if (options.doubleQuotes) {
+  quoteType = "double";
+} else {
+  quoteType = undefined; // Will auto-detect later if necessary
+}
+
+// Handle trailing comma and semicolon options
+let includeTrailingComma: boolean | undefined = options.trailingComma;
+let includeSemicolon: boolean | undefined = options.semicolon;
+
 const fileExtension = useTS ? "ts" : useJS ? "js" : "json";
 const exportSyntax = useTS || useJS;
 
@@ -91,10 +105,10 @@ function isValidIdentifier(key: string): boolean {
 function addCommentsToTranslations(
   baseObj: any,
   updatedObj: any,
-  indent: string = "",
-  isTSJS: boolean = false,
-  quoteChar: string = '"',
-  includeTrailingComma: boolean = true
+  indent: string,
+  isTSJS: boolean,
+  quoteChar: string,
+  trailingComma: boolean
 ): string {
   let result = "";
   const indentUnit = "  "; // Two spaces
@@ -102,7 +116,7 @@ function addCommentsToTranslations(
   keys.forEach((key, index) => {
     const value = baseObj[key];
     const isLast = index === keys.length - 1;
-    const trailingComma = includeTrailingComma || !isLast ? "," : "";
+    const comma = trailingComma || !isLast ? "," : "";
 
     // Determine whether to quote the key
     const needToQuoteKey = !isTSJS || !isValidIdentifier(key);
@@ -122,9 +136,9 @@ function addCommentsToTranslations(
         indent + indentUnit,
         isTSJS,
         quoteChar,
-        includeTrailingComma
+        trailingComma
       );
-      result += `${indent}}${trailingComma}\n`;
+      result += `${indent}}${comma}\n`;
     } else {
       // Escape special characters in the English text and translation value
       const escapedEnglishText = String(value)
@@ -145,7 +159,7 @@ function addCommentsToTranslations(
 
       // Add the comment and key-value pair
       result += `${indent}// ${escapedEnglishText}\n`;
-      result += `${indent}${formattedKey}: ${quoteChar}${escapedTranslationValue}${quoteChar}${trailingComma}\n`;
+      result += `${indent}${formattedKey}: ${quoteChar}${escapedTranslationValue}${quoteChar}${comma}\n`;
     }
   });
   return result;
@@ -157,14 +171,10 @@ function addCommentsToTranslations(
  */
 function detectStyleFromContent(content: string) {
   // Detect quote style
-  const singleQuotesCount = (content.match(/'/g) || []).length;
-  const doubleQuotesCount = (content.match(/"/g) || []).length;
-  if (useSingleQuotes === undefined && useDoubleQuotes === undefined) {
-    if (singleQuotesCount > doubleQuotesCount) {
-      useSingleQuotes = true;
-    } else {
-      useSingleQuotes = false;
-    }
+  if (quoteType === undefined) {
+    const singleQuotesCount = (content.match(/'/g) || []).length;
+    const doubleQuotesCount = (content.match(/"/g) || []).length;
+    quoteType = singleQuotesCount > doubleQuotesCount ? "single" : "double";
   }
 
   // Detect trailing comma
@@ -212,7 +222,7 @@ function processTranslations() {
   }
 
   // Determine quote character
-  const quoteChar = useSingleQuotes ? "'" : '"';
+  const quoteChar = quoteType === "single" ? "'" : '"';
 
   targetLanguages.forEach((lang: string) => {
     const targetFilePath = path.join(
@@ -254,7 +264,7 @@ function processTranslations() {
       "  ",
       exportSyntax,
       quoteChar,
-      includeTrailingComma
+      includeTrailingComma!
     )}}`;
 
     let updatedContent: string;
