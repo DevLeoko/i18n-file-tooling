@@ -1,0 +1,90 @@
+{
+  "encounters": {
+    // Favoritennn
+    "favorites": "Favsss asdahskdjh asklhd ashd ahlksdhjkasdjhk salhd hsajkdhj asjködkla sjdhkjhas  kjhas jkdhasd kahsdkj ahsdkjasdhlajksd asd kljaskldj a slkdjkjhas jkdhasd kahsdkj ahsdkjasdhlajksd asd kljaskldj a slkdjkjhas jkdhasd kahsdkj ahsdkjasdhlajksd asd kljaskldj a slkdjjkdhasd kahsdkj ahsdkjasdhlajksd asd kljaskldj a slkdjasöd kljsad lkjasdlö jsadkl jasd!",
+    // Alle Fälle
+    "allCases": "asdasd",
+    // Suchen...
+    "search": "",
+    // Keine Fälle gefunden
+    "noCasesFound": "",
+    // Keine Fälle gefunden, die deiner Suche entsprechen
+    "noCasesFoundMessage": "",
+    // Kein Fall ausgewählt
+    "noCaseSelected": "",
+    // Wähle einen Fall links aus der Liste aus
+    "selectCaseMessage": "",
+    // Fall hinzufügen
+    "addCase": ""
+  },
+  "profile": {
+    "settings": {
+      // Account Einstellungen
+      "title": "",
+      // Name
+      "name": "",
+      // E-Mail
+      "email": "",
+      // Organisation
+      "organization": "",
+      "motherTongue": {
+        // Muttersprache
+        "label": "",
+        // Ihre Muttersprache wird verwendet bei der Übersetzung von Patientengesprächen in Ihre Sprache.
+        "description": ""
+      },
+      // Sprache der Benutzeroberfläche
+      "uiLanguage": ""
+    }
+  },
+  "languages": {
+    // Arabisch
+    "ar": "",
+    // Katalanisch
+    "ca": "",
+    // Chinesisch
+    "zh": "",
+    // Tschechisch
+    "cs": "",
+    // Dänisch
+    "da": "",
+    // Niederländisch
+    "nl": "",
+    // Englisch
+    "en": "",
+    // Finnisch
+    "fi": "",
+    // Französisch
+    "fr": "",
+    // Deutsch
+    "de": "",
+    // Griechisch
+    "el": "",
+    // Hindi
+    "hi": "",
+    // Ungarisch
+    "hu": "",
+    // Italienisch
+    "it": "",
+    // Japanisch
+    "ja": "",
+    // Koreanisch
+    "ko": "",
+    // Norwegisch
+    "no": "",
+    // Polnisch
+    "pl": "",
+    // Portugiesisch
+    "pt": "",
+    // Russisch
+    "ru": "",
+    // Spanisch
+    "es": "",
+    // Türkisch
+    "tr": "",
+    // Ukrainisch
+    "uk": "",
+    // Vietnamesisch
+    "vi": ""
+  }
+}

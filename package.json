@@ -1,0 +1,29 @@
+{
+  "name": "i18n-file-tooling",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "bin": {
+    "i18n-update": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "postbuild": "node add-shebang.js",
+    "start": "ts-node --files -r tsconfig-paths/register src/index.ts",
+    "dev": "nodemon src/index.ts --exec \"ts-node --files -r tsconfig-paths/register\""
+  },
+  "author": "Leo Garbe",
+  "license": "ISC",
+  "dependencies": {
+    "chokidar": "^4.0.1",
+    "commander": "^12.1.0",
+    "json5": "^2.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.0.0"
+  }
+}
