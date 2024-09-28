@@ -79,18 +79,18 @@ You have translation files in JSON format. Your base language is English (`en.js
 
 ##### Existing German Translation (`de.json`)
 
-```json5
+```json
 {
   // Hello, world!
-  greeting: "Hallo, Welt!",
+  "greeting": "Hallo, Welt!",
   // The key "farewell" is missing
-  menu: {
+  "menu": {
     // Home
-    home: "Startseite",
+    "home": "Startseite",
     // Profile
-    profile: "Profil",
+    "profile": "Profil"
     // The key "settings" is missing
-  },
+  }
 }
 ```
 
@@ -104,20 +104,20 @@ i18n-update --path ./translations --from en --to de
 
 ##### Updated German Translation (`de.json`)
 
-```json5
+```json
 {
   // Hello, world!
-  greeting: "Hallo, Welt!",
+  "greeting": "Hallo, Welt!",
   // Goodbye!
-  farewell: "",
-  menu: {
+  "farewell": "",
+  "menu": {
     // Home
-    home: "Startseite",
+    "home": "Startseite",
     // Profile
-    profile: "Profil",
+    "profile": "Profil",
     // Settings
-    settings: "",
-  },
+    "settings": ""
+  }
 }
 ```
 
