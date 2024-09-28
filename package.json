@@ -8,9 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "postbuild": "node add-shebang.js",
-    "start": "ts-node --files -r tsconfig-paths/register src/index.ts",
-    "dev": "nodemon src/index.ts --exec \"ts-node --files -r tsconfig-paths/register\""
+    "postbuild": "node add-shebang.js"
   },
   "author": "Leo Garbe",
   "license": "ISC",
