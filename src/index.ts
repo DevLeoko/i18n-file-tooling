@@ -19,6 +19,11 @@ program
   .option("--ts", "Use TypeScript files instead of JSON")
   .option("--js", "Use JavaScript files instead of JSON")
   .option("--single-quotes", "Use single quotes in TS/JS mode")
+  .option("--double-quotes", "Use double quotes in TS/JS mode")
+  .option("--trailing-comma", "Include trailing commas in objects")
+  .option("--no-trailing-comma", "Do not include trailing commas in objects")
+  .option("--semicolon", "Include semicolon at the end of files")
+  .option("--no-semicolon", "Do not include semicolon at the end of files")
   .parse(process.argv);
 
 const options = program.opts();
@@ -30,7 +35,10 @@ const targetLanguages = options.to
   .filter((lang: string) => lang.length > 0);
 const useTS = options.ts;
 const useJS = options.js;
-const useSingleQuotes = options.singleQuotes;
+let useSingleQuotes = options.singleQuotes;
+let useDoubleQuotes = options.doubleQuotes;
+let includeTrailingComma = options.trailingComma;
+let includeSemicolon = options.semicolon;
 const fileExtension = useTS ? "ts" : useJS ? "js" : "json";
 const exportSyntax = useTS || useJS;
 
@@ -85,22 +93,25 @@ function addCommentsToTranslations(
   updatedObj: any,
   indent: string = "",
   isTSJS: boolean = false,
-  useSingleQuotes: boolean = false
+  quoteChar: string = '"',
+  includeTrailingComma: boolean = true
 ): string {
   let result = "";
   const indentUnit = "  "; // Two spaces
   const keys = Object.keys(baseObj);
-  const quoteChar = useSingleQuotes ? "'" : '"';
   keys.forEach((key, index) => {
     const value = baseObj[key];
     const isLast = index === keys.length - 1;
+    const trailingComma = includeTrailingComma || !isLast ? "," : "";
 
     // Determine whether to quote the key
     const needToQuoteKey = !isTSJS || !isValidIdentifier(key);
+    const escapedKey = key
+      .replace(/\\/g, "\\\\")
+      .replace(/"/g, '\\"')
+      .replace(/'/g, "\\'");
     const formattedKey = needToQuoteKey
-      ? `${quoteChar}${key
-          .replace(/\\/g, "\\\\")
-          .replace(/"/g, '\\"')}${quoteChar}`
+      ? `${quoteChar}${escapedKey}${quoteChar}`
       : key;
 
     if (typeof value === "object" && value !== null) {
@@ -110,9 +121,10 @@ function addCommentsToTranslations(
         updatedObj[key],
         indent + indentUnit,
         isTSJS,
-        useSingleQuotes
+        quoteChar,
+        includeTrailingComma
       );
-      result += `${indent}}${isLast ? "" : ","}\n`;
+      result += `${indent}}${trailingComma}\n`;
     } else {
       // Escape special characters in the English text and translation value
       const escapedEnglishText = String(value)
@@ -125,7 +137,7 @@ function addCommentsToTranslations(
         .replace(/\\/g, "\\\\")
         .replace(/\r?\n/g, "\\n");
 
-      if (useSingleQuotes) {
+      if (quoteChar === "'") {
         escapedTranslationValue = escapedTranslationValue.replace(/'/g, "\\'");
       } else {
         escapedTranslationValue = escapedTranslationValue.replace(/"/g, '\\"');
@@ -133,12 +145,37 @@ function addCommentsToTranslations(
 
       // Add the comment and key-value pair
       result += `${indent}// ${escapedEnglishText}\n`;
-      result += `${indent}${formattedKey}: ${quoteChar}${escapedTranslationValue}${quoteChar}${
-        isLast ? "" : ","
-      }\n`;
+      result += `${indent}${formattedKey}: ${quoteChar}${escapedTranslationValue}${quoteChar}${trailingComma}\n`;
     }
   });
   return result;
+}
+
+/**
+ * Detects the coding style from the base file content.
+ * @param content The content of the base file.
+ */
+function detectStyleFromContent(content: string) {
+  // Detect quote style
+  const singleQuotesCount = (content.match(/'/g) || []).length;
+  const doubleQuotesCount = (content.match(/"/g) || []).length;
+  if (useSingleQuotes === undefined && useDoubleQuotes === undefined) {
+    if (singleQuotesCount > doubleQuotesCount) {
+      useSingleQuotes = true;
+    } else {
+      useSingleQuotes = false;
+    }
+  }
+
+  // Detect trailing comma
+  if (includeTrailingComma === undefined) {
+    includeTrailingComma = /,\s*}/.test(content) || /,\s*\]/.test(content);
+  }
+
+  // Detect semicolon at the end
+  if (includeSemicolon === undefined) {
+    includeSemicolon = /;\s*$/.test(content);
+  }
 }
 
 /**
@@ -158,7 +195,12 @@ function processTranslations() {
       // Remove the export statement and parse the object
       const contentWithoutExport = baseFileContent
         .replace(/export\s+default\s+/, "")
+        .replace(/module\.exports\s*=\s*/, "")
         .replace(/;\s*$/, ""); // Remove trailing semicolon if present
+
+      // Detect style from the content
+      detectStyleFromContent(baseFileContent);
+
       baseTranslations = JSON5.parse(contentWithoutExport);
     } else {
       baseTranslations = JSON5.parse(baseFileContent);
@@ -168,6 +210,9 @@ function processTranslations() {
     console.error(error);
     return;
   }
+
+  // Determine quote character
+  const quoteChar = useSingleQuotes ? "'" : '"';
 
   targetLanguages.forEach((lang: string) => {
     const targetFilePath = path.join(
@@ -181,6 +226,7 @@ function processTranslations() {
         if (exportSyntax) {
           const contentWithoutExport = existingFileContent
             .replace(/export\s+default\s+/, "")
+            .replace(/module\.exports\s*=\s*/, "")
             .replace(/;\s*$/, "");
           existingTranslations = JSON5.parse(contentWithoutExport);
         } else {
@@ -207,13 +253,16 @@ function processTranslations() {
       updatedTranslations,
       "  ",
       exportSyntax,
-      useSingleQuotes
+      quoteChar,
+      includeTrailingComma
     )}}`;
 
     let updatedContent: string;
     if (exportSyntax) {
       // For TS/JS files, add the export statement
-      updatedContent = `export default ${translationsWithComments};\n`;
+      updatedContent = `export default ${translationsWithComments}${
+        includeSemicolon ? ";" : ""
+      }\n`;
     } else {
       // For JSON files
       updatedContent = `${translationsWithComments}\n`;
