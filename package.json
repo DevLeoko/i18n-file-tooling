@@ -1,14 +1,36 @@
 {
   "name": "i18n-file-tooling",
   "version": "1.1.0",
-  "description": "",
+  "description": "CLI that syncs i18n translation files with a base language file, preserving existing translations and code style",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "i18n-update": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
-    "postbuild": "node add-shebang.js"
+    "postbuild": "node add-shebang.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "i18n",
+    "internationalization",
+    "localization",
+    "translation",
+    "cli",
+    "json",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevLeoko/i18n-file-tooling.git"
+  },
+  "homepage": "https://github.com/DevLeoko/i18n-file-tooling#readme",
+  "bugs": {
+    "url": "https://github.com/DevLeoko/i18n-file-tooling/issues"
   },
   "author": "Leo Garbe",
   "license": "ISC",
