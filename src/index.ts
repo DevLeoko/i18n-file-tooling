@@ -24,6 +24,8 @@ program
   .option("--no-trailing-comma", "Do not include trailing commas in objects")
   .option("--semicolon", "Include semicolon at the end of files")
   .option("--no-semicolon", "Do not include semicolon at the end of files")
+  .option("--tabs", "Indent with tabs")
+  .option("--spaces <count>", "Indent with the given number of spaces")
   .parse(process.argv);
 
 const options = program.opts();
@@ -52,6 +54,24 @@ if (options.singleQuotes && options.doubleQuotes) {
 // Handle trailing comma and semicolon options
 let includeTrailingComma: boolean | undefined = options.trailingComma;
 let includeSemicolon: boolean | undefined = options.semicolon;
+
+// Handle indentation
+let indentUnit: string | undefined;
+if (options.tabs && options.spaces !== undefined) {
+  console.error("Cannot specify both --tabs and --spaces");
+  process.exit(1);
+} else if (options.tabs) {
+  indentUnit = "\t";
+} else if (options.spaces !== undefined) {
+  const spaceCount = Number(options.spaces);
+  if (!Number.isInteger(spaceCount) || spaceCount < 1) {
+    console.error("--spaces must be a positive integer");
+    process.exit(1);
+  }
+  indentUnit = " ".repeat(spaceCount);
+} else {
+  indentUnit = undefined; // Will auto-detect later if necessary
+}
 
 const fileExtension = useTS ? "ts" : useJS ? "js" : "json";
 const exportSyntax = useTS || useJS;
@@ -100,18 +120,19 @@ function isValidIdentifier(key: string): boolean {
  * @param baseObj The base translation object.
  * @param updatedObj The updated translation object.
  * @param indent The indentation string for formatting.
+ * @param indentUnit The indentation string added for each nesting level.
  * @returns A formatted string representing the updated translation with comments.
  */
 function addCommentsToTranslations(
   baseObj: any,
   updatedObj: any,
   indent: string,
+  indentUnit: string,
   isTSJS: boolean,
   quoteChar: string,
   trailingComma: boolean
 ): string {
   let result = "";
-  const indentUnit = "  "; // Two spaces
   const keys = Object.keys(baseObj);
   keys.forEach((key, index) => {
     const value = baseObj[key];
@@ -134,6 +155,7 @@ function addCommentsToTranslations(
         value,
         updatedObj[key],
         indent + indentUnit,
+        indentUnit,
         isTSJS,
         quoteChar,
         trailingComma
@@ -163,6 +185,46 @@ function addCommentsToTranslations(
     }
   });
   return result;
+}
+
+/**
+ * Detects the indentation unit (tabs or spaces) used in a file.
+ * @param content The content of the file.
+ * @returns The indentation string for a single nesting level.
+ */
+function detectIndentUnit(content: string): string {
+  const lines = content.split(/\r?\n/);
+  let tabIndentedLines = 0;
+  const spaceWidths: number[] = [];
+
+  for (const line of lines) {
+    const leadingWhitespace = /^[ \t]+/.exec(line);
+    // Blank lines carry no indentation information
+    if (!leadingWhitespace || line.trim().length === 0) continue;
+
+    if (leadingWhitespace[0].startsWith("\t")) {
+      tabIndentedLines++;
+    } else {
+      spaceWidths.push(leadingWhitespace[0].length);
+    }
+  }
+
+  if (tabIndentedLines > spaceWidths.length) {
+    return "\t";
+  }
+  if (spaceWidths.length === 0) {
+    return "  ";
+  }
+
+  // The step between nesting levels is the smallest difference between the
+  // distinct indentation widths in the file (e.g. 0/4/8 -> 4).
+  const distinctWidths = [...new Set(spaceWidths)].sort((a, b) => a - b);
+  let step = distinctWidths[0];
+  for (let i = 1; i < distinctWidths.length; i++) {
+    step = Math.min(step, distinctWidths[i] - distinctWidths[i - 1]);
+  }
+
+  return " ".repeat(Math.max(step, 1));
 }
 
 /**
@@ -199,6 +261,10 @@ function processTranslations() {
   }
   const baseFileContent = fs.readFileSync(baseFilePath, "utf-8");
   let baseTranslations: any = {};
+
+  if (indentUnit === undefined) {
+    indentUnit = detectIndentUnit(baseFileContent);
+  }
 
   try {
     if (exportSyntax) {
@@ -261,7 +327,8 @@ function processTranslations() {
     const translationsWithComments = `{\n${addCommentsToTranslations(
       baseTranslations,
       updatedTranslations,
-      "  ",
+      indentUnit!,
+      indentUnit!,
       exportSyntax,
       quoteChar,
       includeTrailingComma!

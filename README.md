@@ -12,7 +12,7 @@ A command-line tool for updating and merging internationalization (i18n) transla
 - **Include Comments**: Adds comments with the original text above each key for better context.
 - **Watch Mode**: Monitors the base file for changes and updates translation files automatically.
 - **Support for TS/JS Files**: Works with TypeScript (`.ts`) and JavaScript (`.js`) translation files in addition to JSON.
-- **Customizable Code Style**: Allows customization of code style preferences like quote types, trailing commas, and semicolons.
+- **Customizable Code Style**: Allows customization of code style preferences like indentation, quote types, trailing commas, and semicolons.
 
 ## Installation
 
@@ -40,10 +40,19 @@ i18n-update --path <translations_folder> --from <base_language> --to <target_lan
 - `--double-quotes`: Use double quotes in TS/JS mode.
 - `--trailing-comma` / `--no-trailing-comma`: Include or omit trailing commas in objects.
 - `--semicolon` / `--no-semicolon`: Include or omit semicolons at the end of files.
+- `--tabs`: Indent with tabs.
+- `--spaces <count>`: Indent with the given number of spaces.
 
-### Code Style Options (For TS/JS Mode)
+### Code Style Options
 
 The tool can auto-detect code style preferences from the base file. However, you can override these settings using the following options:
+
+- **Indentation** (JSON, TS and JS):
+  - `--tabs`: Indent with tabs.
+  - `--spaces <count>`: Indent with `<count>` spaces (e.g. `--spaces 4`).
+  - When neither is given, the indentation of the base file is detected and reused. Files that are mostly tab-indented produce tabs; otherwise the smallest step between indentation levels is used as the unit, falling back to two spaces.
+
+The remaining options apply to TS/JS mode only:
 
 - **Quote Type**:
   - `--single-quotes`: Use single quotes (`'`) in strings.
